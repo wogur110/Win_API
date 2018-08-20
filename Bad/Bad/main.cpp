@@ -27,9 +27,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 	WndClass.style = CS_HREDRAW | CS_VREDRAW;
 	RegisterClass(&WndClass);
 
-	hWnd = CreateWindow(lpszClass, lpszClass, WS_POPUP,
-		CW_USEDEFAULT, CW_USEDEFAULT, 1000, 600,
-		NULL, (HMENU)NULL, hInstance, NULL);
+	hWnd = CreateWindow(lpszClass,				// mode
+			    lpszClass,				// Title Name
+			    WS_POPUP,				// Style
+			    CW_USEDEFAULT,			// Start Position x
+			    CW_USEDEFAULT,			// Start Position y
+			    1000,				// Size x
+			    600,				// Size y
+			    NULL, (HMENU)NULL,		
+			    hInstance,				// HINSTANCE
+			    NULL);				// Content
 
 
 	ShowWindow(hWnd, nCmdShow);
@@ -44,19 +51,17 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 {
-	HWND hStart;			// TO Make Start Message
-
 	HDC m_hdc;
-	HDC mem_hdc;		// Ãâ·Â¿ë ¹öÆÛ
+	HDC mem_hdc;		// Buffer To Handle			( For dubble buffering )
 
 	HBITMAP bitmap, old_bitmap;
-	BITMAP bit;
+	BITMAP bit_info;
 
 	static int screen_x = GetSystemMetrics(SM_CXSCREEN);
 	static int screen_y = GetSystemMetrics(SM_CYSCREEN);
 
-	int bx;
-	int by;
+	int image_x;
+	int image_y;
 
 	switch (iMessage)
 	{
@@ -65,26 +70,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 
 	case WM_PAINT:
 		m_hdc = GetDC(hWnd);
-		mem_hdc = CreateCompatibleDC(m_hdc);													// parameter DC¿Í µ¿ÀÏÇÑ Æ¯¼ºÀÇ ¸Ş¸ğ¸® DC ¹İÈ¯
+		mem_hdc = CreateCompatibleDC(m_hdc);									// parameter DCì™€ ë™ì¼í•œ íŠ¹ì„±ì˜ ë©”ëª¨ë¦¬ DC ë°˜í™˜
 
-		bitmap = (HBITMAP)LoadImage(NULL, "img.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);		// Load Image
+		bitmap = (HBITMAP)LoadImage(NULL, "img.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 
-		if (bitmap == NULL)																		// Image Load Fail
+		if (bitmap == NULL)											// Image Load Fail
 		{
 			MessageBox(hWnd, "Failed", "Failed..", MB_OK);
 			PostQuitMessage(0);
 			return E_FAIL;
 		}
 
-		old_bitmap = (HBITMAP)SelectObject(mem_hdc, bitmap);									// mem_hdc ¿¡ bitmap ¿¬°á (Ãâ·Â½Ã ÇØ´ç object »ç¿ë)
-		// return °ªÀº ÀÌÀü¿¡ ¼±ÅÃµÇ¾î ÀÖ´ø °°ÀºÁ¾·ùÀÇ object ÇÚµé
+		old_bitmap = (HBITMAP)SelectObject(mem_hdc, bitmap);		// mem_hdc ì— bitmap ì—°ê²° (ì¶œë ¥ì‹œ í•´ë‹¹ object ì‚¬ìš©)
+										// return ê°’ì€ ì´ì „ì— ì„ íƒë˜ì–´ ìˆë˜ ê°™ì€ì¢…ë¥˜ì˜ object í•¸ë“¤
 		
-		GetObject(bitmap, sizeof(BITMAP), &bit);												// bit ¿¡ ÀÌ¹ÌÁö Á¤º¸ °¡Á®¿È
-		bx = bit.bmWidth;
-		by = bit.bmHeight;
+		GetObject(bitmap, sizeof(BITMAP), &bit_info);			// bit_info ì— ì´ë¯¸ì§€ ì •ë³´ ê°€ì ¸ì˜´
+		image_x = bit_info.bmWidth;
+		image_y = bit_info.bmHeight;
 
-		TransparentBlt(m_hdc, 0, 0, screen_x, screen_y, mem_hdc, 0, 0, bx, by, RGB(255, 255, 255));				// m_hdc - screen , mem_hdc - screen buffer (we modify)
-		//BitBlt(m_hdc, 0, 0, bx, by, mem_hdc, 0, 0, SRCCOPY);
+		TransparentBlt(m_hdc, 0, 0, screen_x, screen_y, mem_hdc, 0, 0, image_x, image_y, RGB(255, 255, 255));	// m_hdc - dst screen , mem_hdc - src screen
+		//BitBlt(m_hdc, 0, 0, image_x, image_y, mem_hdc, 0, 0, SRCCOPY);
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);					// Program End
